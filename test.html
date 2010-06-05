@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Migrator Test</title>
+	</head>
+	<body>
+		<!-- jQuery isn't required for migrator.js, just for my example code
+		below.  You can use any JS library you want. -->
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.js"></script>
+		<script type="text/javascript" src="migrator.js"></script>
+		<script type="text/javascript">
+			var db = openDatabase("example_db", "", "Example Database", 100000);
+			// now db is a database object: http://dev.w3.org/html5/webdatabase/#database
+
+            var M = new Migrator(db);
+            M.migration(1, function(t){
+              // t here is a transaction object: http://dev.w3.org/html5/webdatabase/#sqltransaction
+              t.executeSql("create table user(id integer primary key, name text)");
+              t.executeSql("insert into user(name) values('max')");
+            });
+            M.migration(2, function(t){
+              t.executeSql("alter table user add column phone text");
+              t.executeSql("update user set phone = '555-5555' where name == 'max'");
+            });
+            M.migration(3, function(t){
+              t.executeSql("insert into user(name, phone) values('jeremy', '555-1234')");
+              t.executeSql("update user set phone = '555-5556' where name == 'max'");
+            });
+
+			// This executes the applicable transactions
+            M.doIt();
+		</script>
+		<h1>Address Book</h1>
+		<p>Here are all the numbers in the address book...</p>
+		<table class="address_book">
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Phone</th>
+			</tr>
+		</table>
+        <script type="text/javascript">
+            db.readTransaction(function(t){
+                t.executeSql("select id, name, phone from user", [], function(t, res){
+                    var rows = res.rows;
+                    var addressTable = $("table.address_book");
+                    for(var i = 0; i < rows.length; i++){
+                        var row = rows.item(i);
+                        var domRow = $("<tr><td>"+row.id+"</td><td>"+row.name+"</td><td>"+row.phone+"</td></tr>");
+                        domRow.appendTo(addressTable);
+                    }
+                });
+            });
+        </script>
+	</body>
+</html>
