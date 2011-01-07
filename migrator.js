@@ -51,7 +51,7 @@ function Migrator(db){
 			throw "Migrator is only valid once -- create a new one if you want to do another migration.";
 		}
 		db.transaction(function(t){
-			t.executeSql("select version from _migrator_schema", [], function(t, res){
+			t.executeSql("select version from " + MIGRATOR_TABLE, [], function(t, res){
 				var rows = res.rows;
 				var version = rows.item(0).version;
 				debug(Migrator.DEBUG_HIGH, "Existing database present, migrating from %d", [version]);
